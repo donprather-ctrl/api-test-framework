@@ -30,10 +30,10 @@ Python, Pytest, Playwright, FakeStoreAPI (fakestoreapi.com)
 
 ## Project Structure: 
 
-\api_client - API clients to connect and interact with the auth and product APIs (OpenAPI docs are available at fakestoreapi.com/docs)
-\config - Base configurations (Service URLs, pointers to default user/password and to test data JSON files)
-\tests - Tests and test fixtures
-\utils - Helper files including a data loader, validation helpers, and response helpers. 
+- \api_client - API clients to connect and interact with the auth and product APIs (OpenAPI docs are available at fakestoreapi.com/docs)
+- \config - Base configurations (Service URLs, pointers to default user/password and to test data JSON files)
+- \tests - Tests and test fixtures
+- \utils - Helper files including a data loader, validation helpers, and response helpers. 
 
 ## Known Limitations
 
@@ -46,16 +46,21 @@ to handle this gracefully rather than asserting against unreliable behavior.
 
 1. Clone the repository:
    git clone https://github.com/donprather-ctrl/api-test-framework.git
+
    cd api-test-framework
 
-2. Install dependencies:
+3. Install dependencies:
+
    py -m pip install -r requirements.txt
 
-3. Install Playwright browsers:
+5. Install Playwright browsers:
+
    py -m playwright install
 
-4. Create a .env file in the project root using .env.example as a template:
+7. Create a .env file in the project root using .env.example as a template:
+
    cp .env.example .env
+
    Then open .env and add your credentials.
 
 ## Running the tests
