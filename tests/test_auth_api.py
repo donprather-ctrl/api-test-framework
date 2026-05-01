@@ -28,6 +28,7 @@ def test_auth_api():
 def test_auth_api_negative():
 
     response = login_user("invalid_user", "wrong_password")
-
     assert response.status_code == 401
+    data = safe_json(response)
+    assert data is None
 
