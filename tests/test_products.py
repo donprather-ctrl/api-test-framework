@@ -24,10 +24,6 @@ def test_get_all_products(auth_headers):
     validate_product(data[0]) #pulls the first item (a dictionary defining the first product) in the list. validate_product is a helper function in utils/validators.py#
 
 
-#_________________________________________________________
-# LEARNING NOTE: The decorator requires two primary arguments...
-# FIRST ...a string containing the parameter names (comma-separated if more than one)
-# SECOND ...an iterable (usually a list of tuples) containing the test values.
 @pytest.mark.parametrize(
     "product_id, is_valid",
     [
@@ -41,7 +37,7 @@ def test_get_all_products(auth_headers):
 def test_get_product_by_id(product_id, is_valid, auth_headers):
 
     # Arrange
-    if is_valid:
+    if is_valid: #if the scenario is intended to be valid (a positive test), we need to pull a real product ID from the API to ensure the test is valid. If the scenario is invalid, we can use the hardcoded values defined in the parametrize decorator.
         list_response = get_all_products(headers=auth_headers)
         assert list_response.status_code == 200
         list_data = safe_json(list_response)
@@ -55,25 +51,26 @@ def test_get_product_by_id(product_id, is_valid, auth_headers):
     assert response.status_code in [200, 404]
     product_data = safe_json(response) #returns either the body (in json) or "None" if the body is not valid json.
 
-
-    if is_valid: #product ID is valid
+    # Assert - the assertions for this test will depend on whether the scenario is valid or invalid. If the scenario is valid, we have certain expectations for the response body. If the scenario is invalid, we have different expectations for the response body (often an empty body or a specific error message).
+    if is_valid: #if the scenario is intended to be valid, we have certain expectations for the response body. If the scenario is invalid, we have different expectations for the response body (often an empty body or a specific error message).
         assert response.status_code == 200
         assert product_data is not None, "Get Product by ID: expected a json response" #assert that product_data can be safely converted to json
         assert isinstance(product_data, dict), "Get Product By ID: Expected a dict in the response"
         validate_product(product_data)
-        assert product_data["id"] == product_id
+        assert product_data["id"] == product_id #the product ID in the response should match the product ID we requested
 
-    else: #product ID is not valid
+    else: #product ID is not intended to be valid (the test is a negative test)
         if product_data is not None:
             assert isinstance(product_data, dict), "Get Product By ID: Expected a dict in the respose"
-            assert product_data == {} or "id" not in product_data
+            assert product_data == {} or "id" not in product_data #the FakeStoreAPI returns an empty object {} when a product is not found, but in the case of an invalid ID type (like a string), it returns a non-json response with an empty body. In either case, we want to assert that we do not get a valid product object back, which would contain an "id" key.
 
         else:
-            assert response.text == ""
+            assert response.text == "" #in the case of an invalid ID type (like a string), the FakeStoreAPI returns a non-json response with an empty body. In this case, we want to assert that the body is indeed empty.
 
 
 def test_create_product(auth_headers):
 
+    #Arrange
     payload = {
         "title": "Test Product",
         "price": 10.99,
@@ -82,7 +79,10 @@ def test_create_product(auth_headers):
         "category": "electronics"
     }
 
+    #Act
     response = create_product(payload, headers=auth_headers)
+    
+    #Assert
     assert response.status_code == 201, "Create Product: Status code not 201"
     data = safe_json(response)
     assert data is not None, "Create Product: expected a json response" #assert that product_data can be safely converted to json
@@ -94,8 +94,8 @@ def test_create_product(auth_headers):
 
 def test_update_product(auth_headers):
 
+    #Arrange
     payload = {
-        "id": 55,
         "title": "Test Product Updated",
         "price": 99.99,
         "description": "Test description updated",
@@ -103,7 +103,10 @@ def test_update_product(auth_headers):
         "category": "home_goods"
     }
 
+    #Act
     response = update_product(44, payload, headers=auth_headers)
+    
+    #Assert
     assert response.status_code == 200
     data = safe_json(response)
     assert data is not None, "Update Product: expected a json response" #assert that product_data can be safely converted to json
@@ -114,14 +117,27 @@ def test_update_product(auth_headers):
 
 def test_delete_product(auth_headers):
 
+    #Arrange
+        #None needed
+    #Act
     response = delete_product(44, headers=auth_headers)
+    
+    #Assert
     assert response.status_code ==  200
 
 
 
 def test_product_e2e_workflow(auth_headers):
+    """
+    Validates the full product lifecycle: CREATE → GET → UPDATE → GET → DELETE.
+    
+    Note: GET validation steps may be skipped due to a known FakeStoreAPI 
+    inconsistency where GET after POST often returns an empty body. 
+    All write operations (create, update, delete) are fully validated.
+    """
 
-    #arrange - define the payload
+    #Lifecycle step: create a product, extract the ID returned by the API
+        #Arrange - define the payload
     test_payload = {
         "title": "Test Product - E2E",
         "price": 1099.99,
@@ -130,8 +146,10 @@ def test_product_e2e_workflow(auth_headers):
         "category": "E2E"
     }
 
-    #Lifecycle step: create a product, extract the ID returned by the API
+        #Act
+
     response = create_product(test_payload, headers=auth_headers)
+        #Assert
     assert response.status_code == 201, "Create Product: status code not 201"
     returned_data = safe_json(response) #safe_json is a helper function. Returns None if the response returns a non-JSON response.
     assert returned_data is not None, "Create Product: expected JSON response but got none"
@@ -142,25 +160,36 @@ def test_product_e2e_workflow(auth_headers):
 
 
     #Lifecycle step: get the product (using the ID returned from create product)
+        #Act
     response_get = get_product_by_id(reference_id, headers=auth_headers)
+    
+    
+        #Assert
     assert response_get.status_code == 200
     product_data = safe_json(response_get)
-    #commenting out the json validation step below as the mocked api does not consistently return a json response
-    #assert product_data is not None, "Get product by id: Expected JSON response but got none"
     if product_data is None:
-        pytest.skip("GET after POST returned empty body — known FakeStoreAPI inconsistency")
+    # Known FakeStoreAPI inconsistency — GET after POST returns empty body.
+    # Continuing test — update and delete lifecycle steps remain valid regardless.
+        pass
+    else:
         assert isinstance(product_data, dict)
         assert product_data["id"] == reference_id, "Get product by id: returned a different product ID than requested"
         validate_product(product_data)
 
+    
     #Lifecycle step: update product, using the extracted ID
+    
+        #Arrange
     updated_payload = test_payload.copy()
     updated_payload["title"] = "Test Product - E2E - Updated"
     updated_payload["price"] = 2199.98
     updated_payload["description"] = "Updated Test description - E2E"
     updated_payload["category"] = "E2E_updated"
 
+        #Act
     response = update_product(reference_id, updated_payload, headers=auth_headers)
+    
+        #Assert
     assert response.status_code == 200, "Update Product: status code not 200"
     returned_data = safe_json(response)
     assert returned_data is not None, "Update Product: expected JSON response but got none"
@@ -168,23 +197,30 @@ def test_product_e2e_workflow(auth_headers):
     assert returned_data["id"] == reference_id, "Update Product: product id mismatch"
     validate_write_response(returned_data, updated_payload) #helper function in utils/validators.py#
 
-    #validating the updated product
+        #validating the updated product
     response_get = get_product_by_id(reference_id, headers=auth_headers)
     assert response_get.status_code == 200
     product_data = safe_json(response_get)
-    #commenting out the json validation step below as the mocked api does not consistently return a json response
-    #assert product_data is not None, "Get product by id: Expected JSON response but got none"
+    
     if product_data is None:
-        pytest.skip("GET after UPDATE returned empty body — known FakeStoreAPI inconsistency")
+    # Known FakeStoreAPI inconsistency — GET after POST often returns empty body.
+    # Continuing test — update and delete lifecycle steps remain valid regardless.
+        pass
+    else:
         assert isinstance(product_data, dict)
         assert product_data["id"] == reference_id, "Get product by id: returned a different product ID than requested"
         validate_product(product_data)
+
         assert product_data["title"] == updated_payload["title"]
         assert product_data["price"] == updated_payload["price"]
         assert product_data["description"] == updated_payload["description"]
         assert product_data["category"] == updated_payload["category"]
 
-    #act - delete the product
+    #Lifecycle step: delete product, using the extracted ID
+    
+        #Act
     response = delete_product(reference_id, headers=auth_headers)
+
+        #Assert
     assert response.status_code ==  200
 
