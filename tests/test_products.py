@@ -10,7 +10,7 @@
 
 import pytest
 from api_client.products_api import get_all_products, get_product_by_id, create_product, update_product, delete_product
-from utils.validators import validate_product, validate_product_update_or_delete
+from utils.validators import validate_product, validate_write_response
 from utils.response_helpers import safe_json
 
 def test_get_all_products(auth_headers):
@@ -89,7 +89,7 @@ def test_create_product(auth_headers):
     assert isinstance(data, dict), "Create Product: Expected a dict in the response"
     assert data["title"] == payload["title"], "Create Product: Title does not match what was entered"
 
-    validate_product_update_or_delete(data, payload) #helper function in utils/validators.py#
+    validate_write_response(data, payload) #helper function in utils/validators.py#
 
 
 def test_update_product(auth_headers):
@@ -110,7 +110,7 @@ def test_update_product(auth_headers):
     assert isinstance(data, dict)
     assert data["title"] == payload["title"]
 
-    validate_product_update_or_delete(data, payload) #helper function in utils/validators.py#
+    validate_write_response(data, payload) #helper function in utils/validators.py#
 
 def test_delete_product(auth_headers):
 
@@ -138,7 +138,7 @@ def test_product_e2e_workflow(auth_headers):
     assert isinstance(returned_data, dict)
     assert returned_data["title"] == test_payload["title"], "Create Product: Product title returned does not match title used"
     reference_id = returned_data["id"] #extract the ID that will be used for the get, update, and delete tests.
-    validate_product_update_or_delete(returned_data, test_payload) # validate
+    validate_write_response(returned_data, test_payload) #helper function in utils/validators.py#
 
 
     #Lifecycle step: get the product (using the ID returned from create product)
@@ -166,7 +166,7 @@ def test_product_e2e_workflow(auth_headers):
     assert returned_data is not None, "Update Product: expected JSON response but got none"
     assert isinstance(returned_data, dict)
     assert returned_data["id"] == reference_id, "Update Product: product id mismatch"
-    validate_product_update_or_delete(returned_data, updated_payload) #helper function in utils/validators.py#
+    validate_write_response(returned_data, updated_payload) #helper function in utils/validators.py#
 
     #validating the updated product
     response_get = get_product_by_id(reference_id, headers=auth_headers)
