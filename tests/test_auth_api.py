@@ -3,7 +3,7 @@
 import requests
 from config.config import DEFAULT_USER , DEFAULT_PASSWORD
 from api_client.auth_api import login_user
-
+from utils.response_helpers import safe_json
 
 
 

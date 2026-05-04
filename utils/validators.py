@@ -35,7 +35,7 @@ def validate_product(product_data):
     assert isinstance(rating["count"], int), "'count' is not int"
 
 
-def validate_product_update_or_delete(data, payload):
+def validate_write_response(data, payload):
 
     assert "id" in data, "id value not returned"
     assert isinstance(data["id"], int), "id is not an integer"
