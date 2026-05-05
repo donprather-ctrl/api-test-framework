@@ -24,8 +24,10 @@ Python, Pytest, Playwright, FakeStoreAPI (fakestoreapi.com)
 - Delete product
 - End-to-end product lifecycle: Create → Get → Update → Get → Delete
 
-**UI**
-- Search functionality on dragracecentral.com
+**UI (saucedemo.com)**
+- Valid login navigates to products page
+- Invalid login displays error message
+- Add product to cart updates cart count
 
 
 ## Project Structure: 
@@ -46,33 +48,38 @@ to handle this gracefully rather than asserting against unreliable behavior.
 
 1. Clone the repository:
    git clone https://github.com/donprather-ctrl/api-test-framework.git
-
    cd api-test-framework
 
-3. Install dependencies:
+2. Create and activate a virtual environment:
+   py -m venv venv
+   venv\Scripts\Activate.ps1
 
+3. Install dependencies:
    py -m pip install -r requirements.txt
 
-5. Install Playwright browsers:
-
+4. Install Playwright browsers:
    py -m playwright install
 
-7. Create a .env file in the project root using .env.example as a template:
-
+5. Create a .env file in the project root using .env.example as a template:
    cp .env.example .env
-
    Then open .env and add your credentials.
 
 ## Running the tests
 
-Run the full test suite:
-   py -m pytest tests/ -v
+Run the full suite:
+   py -m pytest -v
+
+Run smoke tests only:
+   py -m pytest -m smoke -v
+
+Run regression suite:
+   py -m pytest -m regression -v
 
 Run API tests only:
-   py -m pytest tests/test_products_api.py tests/test_auth_api.py -v
+   py -m pytest -m api -v
 
 Run UI tests only:
-   py -m pytest tests/tst_ui_interaction.py -v
+   py -m pytest -m ui -v
 
 ##Author
 
