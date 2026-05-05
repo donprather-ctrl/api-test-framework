@@ -13,6 +13,9 @@ from api_client.products_api import get_all_products, get_product_by_id, create_
 from utils.validators import validate_product, validate_write_response
 from utils.response_helpers import safe_json
 
+
+@pytest.mark.api
+@pytest.mark.smoke
 def test_get_all_products(auth_headers):
 
     response = get_all_products(headers=auth_headers) #call the api client for get all products
@@ -34,6 +37,9 @@ def test_get_all_products(auth_headers):
 )
 
 
+
+@pytest.mark.api
+@pytest.mark.smoke
 def test_get_product_by_id(product_id, is_valid, auth_headers):
 
     # Arrange
@@ -68,6 +74,8 @@ def test_get_product_by_id(product_id, is_valid, auth_headers):
             assert response.text == "" #in the case of an invalid ID type (like a string), the FakeStoreAPI returns a non-json response with an empty body. In this case, we want to assert that the body is indeed empty.
 
 
+@pytest.mark.api
+@pytest.mark.smoke
 def test_create_product(auth_headers):
 
     #Arrange
@@ -92,6 +100,9 @@ def test_create_product(auth_headers):
     validate_write_response(data, payload) #helper function in utils/validators.py#
 
 
+
+@pytest.mark.api
+@pytest.mark.smoke
 def test_update_product(auth_headers):
 
     #Arrange
@@ -115,6 +126,9 @@ def test_update_product(auth_headers):
 
     validate_write_response(data, payload) #helper function in utils/validators.py#
 
+
+@pytest.mark.api
+@pytest.mark.smoke
 def test_delete_product(auth_headers):
 
     #Arrange
@@ -127,6 +141,9 @@ def test_delete_product(auth_headers):
 
 
 
+
+@pytest.mark.api
+@pytest.mark.regression
 def test_product_e2e_workflow(auth_headers):
     """
     Validates the full product lifecycle: CREATE → GET → UPDATE → GET → DELETE.
