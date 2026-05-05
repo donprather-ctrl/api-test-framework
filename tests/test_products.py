@@ -9,14 +9,22 @@
 ### -test_product_workflow (e2e test.. create product, get product details, update product, delete product)
 
 import pytest
+import os
 from api_client.products_api import get_all_products, get_product_by_id, create_product, update_product, delete_product
 from utils.validators import validate_product, validate_write_response
 from utils.response_helpers import safe_json
 
 
+def is_ci():
+    return os.getenv("CI", "false").lower() == "true"
+
+
 @pytest.mark.api
 @pytest.mark.smoke
 def test_get_all_products(auth_headers):
+
+    if is_ci():
+        pytest.skip("FakeStoreAPI blocks GitHub Actions IPs — validated locally only")
 
     response = get_all_products(headers=auth_headers) #call the api client for get all products
     assert response.status_code == 200
@@ -41,6 +49,9 @@ def test_get_all_products(auth_headers):
 @pytest.mark.api
 @pytest.mark.smoke
 def test_get_product_by_id(product_id, is_valid, auth_headers):
+
+    if is_ci():
+        pytest.skip("FakeStoreAPI blocks GitHub Actions IPs — validated locally only")
 
     # Arrange
     if is_valid: #if the scenario is intended to be valid (a positive test), we need to pull a real product ID from the API to ensure the test is valid. If the scenario is invalid, we can use the hardcoded values defined in the parametrize decorator.
@@ -78,6 +89,9 @@ def test_get_product_by_id(product_id, is_valid, auth_headers):
 @pytest.mark.smoke
 def test_create_product(auth_headers):
 
+    if is_ci():
+        pytest.skip("FakeStoreAPI blocks GitHub Actions IPs — validated locally only")
+    
     #Arrange
     payload = {
         "title": "Test Product",
@@ -105,6 +119,9 @@ def test_create_product(auth_headers):
 @pytest.mark.smoke
 def test_update_product(auth_headers):
 
+    if is_ci():
+        pytest.skip("FakeStoreAPI blocks GitHub Actions IPs — validated locally only")
+
     #Arrange
     payload = {
         "title": "Test Product Updated",
@@ -130,6 +147,9 @@ def test_update_product(auth_headers):
 @pytest.mark.api
 @pytest.mark.smoke
 def test_delete_product(auth_headers):
+
+    if is_ci():
+        pytest.skip("FakeStoreAPI blocks GitHub Actions IPs — validated locally only")
 
     #Arrange
         #None needed
