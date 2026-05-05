@@ -27,6 +27,16 @@ jobs:
       - name: Install Playwright browsers
         run: playwright install --with-deps chromium
 
+      - name: Debug secrets
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          DEFAULT_USER: ${{ secrets.DEFAULT_USER }}
+          DEFAULT_PASSWORD: ${{ secrets.DEFAULT_PASSWORD }}
+        run: |
+          echo "BASE_URL is set: ${{ secrets.BASE_URL != '' }}"
+          echo "DEFAULT_USER is set: ${{ secrets.DEFAULT_USER != '' }}"
+          echo "DEFAULT_PASSWORD is set: ${{ secrets.DEFAULT_PASSWORD != '' }}"
+
       - name: Run smoke tests
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
