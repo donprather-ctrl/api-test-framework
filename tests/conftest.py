@@ -48,7 +48,11 @@ def mock_fakestore_in_ci(request):
 
     def auth_callback(request):
         body = json.loads(request.body)
-        if body.get("username") == DEFAULT_USER and body.get("password") == DEFAULT_PASSWORD:
+        username = body.get("username", "")
+        password = body.get("password", "")
+        if username == "" or password == "":
+            return (400, {}, json.dumps({"error": "invalid request"}))
+        if username == DEFAULT_USER and password == DEFAULT_PASSWORD:
             return (201, {}, json.dumps({"token": "mock-ci-token"}))
         return (401, {}, "")
 
