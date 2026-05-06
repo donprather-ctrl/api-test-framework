@@ -1,3 +1,4 @@
+![Tests](https://github.com/donprather-ctrl/api-test-framework/actions/workflows/tests.yml/badge.svg)
 README
 
 ## Project Description:
@@ -9,6 +10,19 @@ the FakeStoreAPI.
 ## Technology Stack
 
 Python, Pytest, Playwright, FakeStoreAPI (fakestoreapi.com)
+
+## CI/CD
+
+This project uses GitHub Actions to run the smoke test suite automatically 
+on every push and pull request.
+
+- Smoke tests run on every push to any branch
+- Full regression suite runs on merges to main
+- Test results are uploaded as artifacts after every run
+
+FakeStoreAPI - as of 5/5/2026 - was blocking requests from GitHub Actions IP ranges. To demonstrate CI/CD integration with automated tests, the API tests run against mocked
+HTTP responses (in CI only, not when running locally) using the responses library, and against 
+the real API locally. UI tests run against saucedemo.com which is reasonably CI-friendly.
 
 ## Test coverage
 
@@ -37,11 +51,17 @@ Python, Pytest, Playwright, FakeStoreAPI (fakestoreapi.com)
 - \tests - Tests and test fixtures
 - \utils - Helper files including a data loader, validation helpers, and response helpers. 
 
-## Known Limitations
+## Known limitations
 
-FakeStoreAPI is a mock API that occasionally returns an empty response 
-body on GET requests following a POST. Affected tests use pytest.skip() 
-to handle this gracefully rather than asserting against unreliable behavior.
+**FakeStoreAPI CI compatibility:** FakeStoreAPI inconsistently blocks requests from GitHub 
+Actions IP ranges. API tests use the responses library to mock HTTP calls 
+in CI, ensuring full test coverage without external dependencies. All tests 
+run against the real API locally.
+
+**FakeStoreAPI GET inconsistency:** GET requests following POST operations 
+generally return an empty response body. Affected steps in the E2E workflow 
+test handle this gracefully — the test continues and validates all write 
+operations regardless.
 
 
 ## Installation and setup
