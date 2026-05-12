@@ -54,3 +54,27 @@ def validate_write_response(data, payload):
 
     assert "title" in data, "Missing title"
     assert data["title"] == payload["title"], "Title does not match"
+
+
+def validate_user(user_data):
+    assert isinstance(user_data, dict), "User is not a dictionary"
+    
+    assert "id" in user_data, "Missing 'id'"
+    assert isinstance(user_data["id"], int), "'id' is not int"
+    
+    assert "firstName" in user_data, "Missing 'firstName'"
+    assert isinstance(user_data["firstName"], str), "'firstName' is not str"
+    
+    assert "lastName" in user_data, "Missing 'lastName'"
+    assert isinstance(user_data["lastName"], str), "'lastName' is not str"
+    
+    assert "email" in user_data, "Missing 'email'"
+    assert isinstance(user_data["email"], str), "'email' is not str"
+
+def validate_user_write_response(data, payload):
+    assert "id" in data, "Missing 'id' in response"
+    assert isinstance(data["id"], int), "'id' is not int"
+    
+    for field in payload:#loop through the fields in the payload and check that they are present in the response and match the values in the payload
+        assert field in data, f"Missing '{field}' in response"
+        assert data[field] == payload[field], f"'{field}' does not match payload"
