@@ -74,9 +74,14 @@ def mock_fakestore_in_ci(request):
         product_id = int(request.url.split("/")[-1])
         return (200, {}, json.dumps({**MOCK_PRODUCT, "id": product_id}))
     
-    def update_callback(request):
+    def update_callback(request):# This callback validates the request body for updating a product, ensuring that the product ID in the URL is valid and that any provided fields are correctly formatted. It returns appropriate error responses for invalid input, and simulates a successful update by returning the updated product data when the input is valid.
         payload = json.loads(request.body)
-        return (200, {}, json.dumps({**payload, "id": 44}))
+        product_id = int(request.url.split("/")[-1])
+        return (200, {}, json.dumps({**payload, "id": product_id}))
+    
+    def delete_callback(request):# This callback simulates the deletion of a product by returning the deleted product data based on the product ID in the URL. It allows tests to verify that the application correctly handles product deletion and processes the response from the API.
+        product_id = int(request.url.split("/")[-1])
+        return (200, {}, json.dumps({**MOCK_PRODUCT, "id": product_id}))
 
     with responses_lib.RequestsMock(assert_all_requests_are_fired=False) as rsps:
 
@@ -102,14 +107,17 @@ def mock_fakestore_in_ci(request):
                 content_type="application/json")
 
         rsps.add_callback(responses_lib.POST, f"{BASE_URL}/products",
-                         callback=create_callback,
-                         content_type="application/json")
+                callback=create_callback,
+                content_type="application/json")
 
-        rsps.add_callback(responses_lib.PUT, f"{BASE_URL}/products/44",
-                         callback=update_callback,
-                         content_type="application/json")
+        rsps.add_callback(responses_lib.PUT,
+                 re.compile(rf"{BASE_URL}/products/\d+"),
+                 callback=update_callback,
+                 content_type="application/json")
 
-        rsps.add(responses_lib.DELETE, f"{BASE_URL}/products/44",
-                 json={**MOCK_PRODUCT, "id": 44}, status=200)
+        rsps.add_callback(responses_lib.DELETE,
+                 re.compile(rf"{BASE_URL}/products/\d+"),
+                 callback=delete_callback,
+                 content_type="application/json")
 
         yield
