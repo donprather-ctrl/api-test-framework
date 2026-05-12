@@ -1,5 +1,7 @@
 #tests/conftest.py
 
+from itertools import product
+from itertools import product
 import re
 import pytest
 import os
@@ -57,6 +59,8 @@ def mock_fakestore_in_ci(request):
             return (201, {}, json.dumps({"token": "mock-ci-token"}))
         return (401, {}, "")
 
+    product_store = {}
+
     def create_callback(request): # This callback validates the request body for creating a product, ensuring required fields are present and correctly formatted. It returns appropriate error responses for invalid input, and simulates a successful creation with a new product ID when the input is valid.
         payload = json.loads(request.body)
     
@@ -68,17 +72,23 @@ def mock_fakestore_in_ci(request):
         if "price" in payload and not isinstance(payload["price"], (int, float)):
             return (400, {}, json.dumps({"error": "price must be a number"}))
     
-        return (201, {}, json.dumps({**payload, "id": 21}))
-
-    def get_product_by_id_callback(request):
-        product_id = int(request.url.split("/")[-1])
-        return (200, {}, json.dumps({**MOCK_PRODUCT, "id": product_id}))
+        product = {**payload, "id": 21}
+        product_store[21] = product
+        return (201, {}, json.dumps(product))
     
-    def update_callback(request):# This callback validates the request body for updating a product, ensuring that the product ID in the URL is valid and that any provided fields are correctly formatted. It returns appropriate error responses for invalid input, and simulates a successful update by returning the updated product data when the input is valid.
+    def update_callback(request):
         payload = json.loads(request.body)
         product_id = int(request.url.split("/")[-1])
-        return (200, {}, json.dumps({**payload, "id": product_id}))
+        product = {**payload, "id": product_id}
+        product_store[product_id] = product
+        return (200, {}, json.dumps(product))
     
+    def get_product_by_id_callback(request):
+        product_id = int(request.url.split("/")[-1])
+        if product_id in product_store:
+            return (200, {}, json.dumps(product_store[product_id]))
+        return (200, {}, json.dumps({**MOCK_PRODUCT, "id": product_id}))
+
     def delete_callback(request):# This callback simulates the deletion of a product by returning the deleted product data based on the product ID in the URL. It allows tests to verify that the application correctly handles product deletion and processes the response from the API.
         product_id = int(request.url.split("/")[-1])
         return (200, {}, json.dumps({**MOCK_PRODUCT, "id": product_id}))
