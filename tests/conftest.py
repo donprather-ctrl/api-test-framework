@@ -79,7 +79,8 @@ def mock_fakestore_in_ci(request):
     def update_callback(request):
         payload = json.loads(request.body)
         product_id = int(request.url.split("/")[-1])
-        product = {**payload, "id": product_id}
+        existing = product_store.get(product_id, MOCK_PRODUCT.copy())
+        product = {**existing, **payload, "id": product_id}
         product_store[product_id] = product
         return (200, {}, json.dumps(product))
     
