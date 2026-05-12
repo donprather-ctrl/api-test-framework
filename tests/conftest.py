@@ -1,5 +1,6 @@
 #tests/conftest.py
 
+import re
 import pytest
 import os
 import json
@@ -79,17 +80,21 @@ def mock_fakestore_in_ci(request):
                          callback=auth_callback,
                          content_type="application/json")
 
-        rsps.add(responses_lib.GET, f"{BASE_URL}/products",
+        rsps.add(responses_lib.GET, f"{BASE_URL}/products",# This mock simulates the API's behavior when retrieving a list of products. By returning a predefined JSON array containing a single product with a 200 status code, it allows tests to verify that the application correctly retrieves and processes product data from the API.
                  json=[MOCK_PRODUCT], status=200)
 
-        rsps.add(responses_lib.GET, f"{BASE_URL}/products/1",
+        rsps.add(responses_lib.GET, f"{BASE_URL}/products/1",# This mock simulates the API's behavior when a valid product ID is requested. By returning a predefined JSON object representing the product with a 200 status code, it allows tests to verify that the application correctly retrieves and processes product data from the API.
                  json=MOCK_PRODUCT, status=200)
 
-        rsps.add(responses_lib.GET, f"{BASE_URL}/products/9999",
+        rsps.add(responses_lib.GET, f"{BASE_URL}/products/9999",# This mock simulates the API's behavior when a non-existent product ID is requested. By returning an empty JSON object with a 200 status code, it allows tests to verify that the application correctly handles cases where a product is not found, without causing unexpected errors or crashes.
                  json={}, status=200)
 
-        rsps.add(responses_lib.GET, f"{BASE_URL}/products/ABCD",
+        rsps.add(responses_lib.GET, f"{BASE_URL}/products/ABCD",# This mock simulates the API's behavior when an invalid product ID is requested. By returning an empty JSON object with a 200 status code, it allows tests to verify that the application correctly handles cases where a product is not found or the ID format is incorrect, without causing unexpected errors or crashes.
                  body=b"", status=200)
+        
+        rsps.add(responses_lib.GET,
+            re.compile(rf"{BASE_URL}/products/\d+"),# This regex matches any GET request to /products/{id} where {id} is a number, allowing us to return a consistent response for valid product IDs while still simulating the behavior of the API for non-existent or invalid IDs.
+            json=MOCK_PRODUCT, status=200)
 
         rsps.add_callback(responses_lib.POST, f"{BASE_URL}/products",
                          callback=create_callback,
