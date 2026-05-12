@@ -42,11 +42,11 @@ def mock_fakestore_in_ci(request):
         yield
         return
 
-    if request.node.get_closest_marker('ui'):
+    if request.node.get_closest_marker('ui'):# Don't apply API mocks to UI tests which use Playwright, not requests.
         yield
         return
 
-    def auth_callback(request):
+    def auth_callback(request): # This callback validates the request body for authentication, ensuring that both username and password are provided. It returns appropriate error responses for missing fields, simulates a successful authentication with a token for valid credentials, and returns an unauthorized response for invalid credentials.
         body = json.loads(request.body)
         username = body.get("username", "")
         password = body.get("password", "")
@@ -56,8 +56,17 @@ def mock_fakestore_in_ci(request):
             return (201, {}, json.dumps({"token": "mock-ci-token"}))
         return (401, {}, "")
 
-    def create_callback(request):
+    def create_callback(request): # This callback validates the request body for creating a product, ensuring required fields are present and correctly formatted. It returns appropriate error responses for invalid input, and simulates a successful creation with a new product ID when the input is valid.
         payload = json.loads(request.body)
+    
+    # Validate required fields
+        if "title" not in payload:
+            return (400, {}, json.dumps({"error": "title is required"}))
+        if not isinstance(payload.get("title"), str) or payload["title"].strip() == "":
+            return (400, {}, json.dumps({"error": "title must be a non-empty string"}))
+        if "price" in payload and not isinstance(payload["price"], (int, float)):
+            return (400, {}, json.dumps({"error": "price must be a number"}))
+    
         return (201, {}, json.dumps({**payload, "id": 21}))
 
     def update_callback(request):

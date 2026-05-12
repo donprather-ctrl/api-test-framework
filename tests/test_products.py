@@ -8,12 +8,13 @@
 ### -test_delete_product
 ### -test_product_workflow (e2e test.. create product, get product details, update product, delete product)
 
+
 import pytest
 import os
+CI = os.getenv("CI", "false").lower() == "true" #if we're running in a CI environment, we will conditionally use an API mock to compensate for lack of valid input validation in Fakestoreapi.
 from api_client.products_api import get_all_products, get_product_by_id, create_product, update_product, delete_product
 from utils.validators import validate_product, validate_write_response
 from utils.response_helpers import safe_json
-
 
 
 @pytest.mark.api
@@ -243,3 +244,20 @@ def test_product_e2e_workflow(auth_headers):
         #Assert
     assert response.status_code ==  200
 
+@pytest.mark.api
+@pytest.mark.regression
+@pytest.mark.skipif(not CI, reason="FakeStoreAPI has no input validation — runs against CI mock only")
+@pytest.mark.parametrize("payload, description", [
+    ({"title": "",      "price": 10.99, "description": "test", "category": "test", "image": "https://i.pravatar.cc"}, "empty title"),
+    ({"title": "Valid", "price": "bad", "description": "test", "category": "test", "image": "https://i.pravatar.cc"}, "string price"),
+    ({                  "price": 10.99, "description": "test", "category": "test", "image": "https://i.pravatar.cc"}, "missing title"),
+])
+
+def test_create_product_invalid_payload(payload, description, auth_headers):
+    """Invalid payloads should be rejected with 400. Runs against CI mock only
+    FakeStoreAPI performs no input validation locally."""
+    response = create_product(payload, headers=auth_headers)
+    assert response.status_code == 400, f"Failed scenario: {description}"
+    data = safe_json(response)
+    if data is not None:
+        assert "id" not in data, f"Security: product must not be created for invalid payload — {description}"
