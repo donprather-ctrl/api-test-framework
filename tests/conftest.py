@@ -60,7 +60,7 @@ def mock_fakestore_in_ci(request):
     def create_callback(request): # This callback validates the request body for creating a product, ensuring required fields are present and correctly formatted. It returns appropriate error responses for invalid input, and simulates a successful creation with a new product ID when the input is valid.
         payload = json.loads(request.body)
     
-    # Validate required fields
+        # Validate required fields
         if "title" not in payload:
             return (400, {}, json.dumps({"error": "title is required"}))
         if not isinstance(payload.get("title"), str) or payload["title"].strip() == "":
@@ -70,6 +70,10 @@ def mock_fakestore_in_ci(request):
     
         return (201, {}, json.dumps({**payload, "id": 21}))
 
+    def get_product_by_id_callback(request):
+        product_id = int(request.url.split("/")[-1])
+        return (200, {}, json.dumps({**MOCK_PRODUCT, "id": product_id}))
+    
     def update_callback(request):
         payload = json.loads(request.body)
         return (200, {}, json.dumps({**payload, "id": 44}))
@@ -91,10 +95,11 @@ def mock_fakestore_in_ci(request):
 
         rsps.add(responses_lib.GET, f"{BASE_URL}/products/ABCD",# This mock simulates the API's behavior when an invalid product ID is requested. By returning an empty JSON object with a 200 status code, it allows tests to verify that the application correctly handles cases where a product is not found or the ID format is incorrect, without causing unexpected errors or crashes.
                  body=b"", status=200)
-        
-        rsps.add(responses_lib.GET,
-            re.compile(rf"{BASE_URL}/products/\d+"),# This regex matches any GET request to /products/{id} where {id} is a number, allowing us to return a consistent response for valid product IDs while still simulating the behavior of the API for non-existent or invalid IDs.
-            json=MOCK_PRODUCT, status=200)
+
+        rsps.add_callback(responses_lib.GET,
+                re.compile(rf"{BASE_URL}/products/\d+"),
+                callback=get_product_by_id_callback,
+                content_type="application/json")
 
         rsps.add_callback(responses_lib.POST, f"{BASE_URL}/products",
                          callback=create_callback,
