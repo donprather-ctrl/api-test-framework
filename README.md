@@ -1,71 +1,49 @@
 ![Tests](https://github.com/donprather-ctrl/api-test-framework/actions/workflows/tests.yml/badge.svg)
 
-README
-
-## Project Description:
-
-A test automation framework built with Python, Pytest, and Playwright, 
-covering API testing, UI testing, and end-to-end workflows against 
-the FakeStoreAPI.
+## Project Description
+A test automation framework built with Python, Pytest, and Playwright,
+covering API testing, UI testing, and end-to-end workflows.
 
 ## Technology Stack
-
-Python, Pytest, Playwright, FakeStoreAPI (fakestoreapi.com)
+Python, Pytest, Playwright, dummyjson (dummyjson.com), saucedemo.com, GitHub Actions
 
 ## CI/CD
-
-This project uses GitHub Actions to run the smoke test suite automatically 
+This project uses GitHub Actions with two jobs that run automatically
 on every push and pull request.
 
-- Smoke tests run on every push to any branch
-- Full regression suite runs on merges to main
+- **Smoke** - runs on every push to any branch; fast critical-path tests
+- **Regression** - runs only if smoke passes; full scenario coverage including
+  edge cases and end-to-end workflows
 - Test results are uploaded as artifacts after every run
 
-FakeStoreAPI - as of 5/5/2026 - was blocking requests from GitHub Actions IP ranges. To demonstrate CI/CD integration with automated tests, the API tests run against mocked
-HTTP responses (in CI only, not when running locally) using the responses library, and against 
-the real API locally. UI tests run against saucedemo.com which is reasonably CI-friendly.
+## Test Coverage
 
-## Test coverage
+**Authentication (dummyjson)**
+- Valid credentials return 200 and an access token
+- Invalid credentials never return a token (6 parametrized scenarios:
+  wrong username, wrong password, both wrong, empty username,
+  empty password, both empty)
 
-**Authentication**
-- Valid login returns a token
-- Invalid credentials do not return a token
-
-**Products API**
-- Get all products
-- Get product by ID (valid ID, invalid type, out-of-range ID)
-- Create product
-- Update product
-- Delete product
-- End-to-end product lifecycle: Create → Get → Update → Get → Delete
+**Users API (dummyjson)**
+- Get all users
+- Get user by ID (valid ID, non-existent ID, invalid type)
+- Create user
+- Update user
+- Delete user
+- End-to-end user lifecycle: Create, Get, Update, Delete
 
 **UI (saucedemo.com)**
 - Valid login navigates to products page
 - Invalid login displays error message
 - Add product to cart updates cart count
 
+## Project Structure
+- api_client/ - API clients for auth and users endpoints
+- config/ - environment-based configuration (base URL, credentials)
+- tests/ - tests and fixtures
+- utils/ - validators, response helpers
 
-## Project Structure: 
-
-- \api_client - API clients to connect and interact with the auth and product APIs (OpenAPI docs are available at fakestoreapi.com/docs)
-- \config - Base configurations (Service URLs, pointers to default user/password and to test data JSON files)
-- \tests - Tests and test fixtures
-- \utils - Helper files including a data loader, validation helpers, and response helpers. 
-
-## Known limitations
-
-**FakeStoreAPI CI compatibility:** FakeStoreAPI inconsistently blocks requests from GitHub 
-Actions IP ranges. API tests use the responses library to mock HTTP calls 
-in CI, ensuring full test coverage without external dependencies. All tests 
-run against the real API locally.
-
-**FakeStoreAPI GET inconsistency:** GET requests following POST operations 
-generally return an empty response body. Affected steps in the E2E workflow 
-test handle this gracefully — the test continues and validates all write 
-operations regardless.
-
-
-## Installation and setup
+## Installation and Setup
 
 1. Clone the repository:
    git clone https://github.com/donprather-ctrl/api-test-framework.git
@@ -81,11 +59,11 @@ operations regardless.
 4. Install Playwright browsers:
    py -m playwright install
 
-5. Create a .env file in the project root using .env.example as a template:
+5. Create a .env file using .env.example as a template:
    cp .env.example .env
    Then open .env and add your credentials.
 
-## Running the tests
+## Running the Tests
 
 Run the full suite:
    py -m pytest -v
@@ -102,8 +80,7 @@ Run API tests only:
 Run UI tests only:
    py -m pytest -m ui -v
 
-##Author
-
+## Author
 Don Prather
 don.prather@protonmail.com
 http://www.linkedin.com/in/donprather
