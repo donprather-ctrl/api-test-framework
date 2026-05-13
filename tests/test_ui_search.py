@@ -1,4 +1,4 @@
-#tests/test_ui_interaction.py
+#tests/test_ui_search.py
 
 from playwright.sync_api import Page, expect
 import pytest
@@ -40,20 +40,17 @@ def test_login_invalid_credentials(page: Page):
 
 @pytest.mark.ui
 @pytest.mark.regression
-def test_add_product_to_cart(page: Page):
+def test_add_product_to_cart(authenticated_page):
     """
     Validates that a user can add a product to the cart.
     Verifies cart count updates after adding an item.
     """
-    # Arrange — log in first
-    page.goto("https://www.saucedemo.com")
-    page.get_by_placeholder("Username").fill("standard_user")
-    page.get_by_placeholder("Password").fill("secret_sauce")
-    page.get_by_role("button", name="Login").click()
-    expect(page).to_have_url("https://www.saucedemo.com/inventory.html")
+    
+    # Arrange — authenticated_page fixture handles login
+    authenticated_page.goto("https://www.saucedemo.com/inventory.html")
 
     # Act
-    page.get_by_role("button", name="Add to cart").first.click()
+    authenticated_page.get_by_role("button", name="Add to cart").first.click()
 
     # Assert
-    expect(page.locator(".shopping_cart_badge")).to_have_text("1")
+    expect(authenticated_page.locator(".shopping_cart_badge")).to_have_text("1")
