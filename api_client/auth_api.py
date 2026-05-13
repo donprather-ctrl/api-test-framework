@@ -12,3 +12,7 @@ def login_user(username, password):
         }
     )
     return response
+
+
+def get_current_user(headers=None):
+    return requests.get(f"{BASE_URL}/auth/me", headers=headers)
