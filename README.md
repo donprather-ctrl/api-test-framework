@@ -19,10 +19,19 @@ on every push and pull request.
 ## Test Coverage
 
 **Authentication (dummyjson)**
-- Valid credentials return 200 and an access token
+- Valid credentials return 200 and a well-formed JWT access token
+- JWT structure validation: confirms three-segment format (header, payload, signature)
+- JWT payload validation: confirms expected claims, valid expiry, and correct username
 - Invalid credentials never return a token (6 parametrized scenarios:
   wrong username, wrong password, both wrong, empty username,
   empty password, both empty)
+
+**Token Handling (dummyjson /auth/me)**
+- Valid token accepted and returns current user profile
+- Malformed token rejected (documents known dummyjson defect: returns 500 instead of 401)
+- Empty token rejected with 401/403
+- Tampered token rejected
+- Missing auth header rejected with 401/403
 
 **Users API (dummyjson)**
 - Get all users
@@ -36,6 +45,12 @@ on every push and pull request.
 - Valid login navigates to products page
 - Invalid login displays error message
 - Add product to cart updates cart count
+
+## Framework Features
+- Session-scoped auth fixture: login runs once per test session, token reused across all API tests
+- Module-scoped UI login fixture: browser state saved to disk after first login, loaded for subsequent UI tests without repeating the login flow
+- Parametrized negative tests across auth and API layers
+- JWT decoder utility for asserting token claims without external libraries
 
 ## Project Structure
 - api_client/ - API clients for auth and users endpoints
