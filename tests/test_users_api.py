@@ -120,3 +120,34 @@ def test_user_e2e_workflow(auth_headers):
     assert response.status_code == 200
     data = safe_json(response)
     assert data.get("isDeleted") is True
+
+
+@pytest.mark.api
+@pytest.mark.regression
+def test_create_user_api_behavior_observations():
+    """
+    Documents known dummyjson behavior on POST /users/add.
+    These are observations, not defects — dummyjson is a testing tool
+    with no real validation or auth enforcement on write operations.
+
+    Known behaviors:
+    - Auth header not required — unauthenticated creates return 201
+    - Missing fields default to empty string or null — not rejected
+    - Integer values accepted for string fields — no type enforcement
+    - Duplicate emails accepted — no uniqueness validation
+    """
+    # No auth header — should require auth but doesn't
+    response = create_user({"firstName": "Test", "lastName": "Test", "email": "test@test.com"})
+    assert response.status_code == 201, "Observed: unauthenticated create returns 201"
+
+    # Missing firstName — defaults to empty string
+    response = create_user({"lastName": "Test", "email": "test@test.com"})
+    assert response.status_code == 201
+    data = safe_json(response)
+    assert data["firstName"] == "", "Observed: missing firstName defaults to empty string"
+
+    # Integer firstName — accepted without type coercion
+    response = create_user({"firstName": 123, "lastName": "Test", "email": "test@test.com"})
+    assert response.status_code == 201
+    data = safe_json(response)
+    assert data["firstName"] == 123, "Observed: integer firstName echoed back unchanged"
