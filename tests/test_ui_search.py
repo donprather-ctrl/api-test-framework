@@ -1,56 +1,36 @@
-#tests/test_ui_search.py
+# tests/test_ui_search.py
 
 from playwright.sync_api import Page, expect
 import pytest
+from pages.login_page import LoginPage
+from pages.inventory_page import InventoryPage
+
 
 @pytest.mark.ui
 @pytest.mark.smoke
 def test_login_valid_credentials(page: Page):
-    """
-    Validates that a user can log in with valid credentials.
-    Verifies the products page loads after successful login.
-    """
-    # Act
-    page.goto("https://www.saucedemo.com")
-    page.get_by_placeholder("Username").fill("standard_user")
-    page.get_by_placeholder("Password").fill("secret_sauce")
-    page.get_by_role("button", name="Login").click()
-
-    # Assert
-    expect(page).to_have_url("https://www.saucedemo.com/inventory.html")
-    expect(page.get_by_text("Products")).to_be_visible()
+    """Valid credentials navigate to the inventory page."""
+    login_page = LoginPage(page)
+    login_page.navigate()
+    login_page.login("standard_user", "secret_sauce")
+    login_page.expect_successful_login()
 
 
 @pytest.mark.ui
 @pytest.mark.smoke
 def test_login_invalid_credentials(page: Page):
-    """
-    Validates that login fails with invalid credentials.
-    Verifies an appropriate error message is displayed.
-    """
-    # Act
-    page.goto("https://www.saucedemo.com")
-    page.get_by_placeholder("Username").fill("invalid_user")
-    page.get_by_placeholder("Password").fill("wrong_password")
-    page.get_by_role("button", name="Login").click()
-
-    # Assert
-    expect(page.get_by_text("Epic sadface: Username and password do not match")).to_be_visible()
+    """Invalid credentials display an error message."""
+    login_page = LoginPage(page)
+    login_page.navigate()
+    login_page.login("invalid_user", "wrong_password")
+    assert "Username and password do not match" in login_page.get_error_message()
 
 
 @pytest.mark.ui
 @pytest.mark.regression
 def test_add_product_to_cart(authenticated_page):
-    """
-    Validates that a user can add a product to the cart.
-    Verifies cart count updates after adding an item.
-    """
-    
-    # Arrange — authenticated_page fixture handles login
-    authenticated_page.goto("https://www.saucedemo.com/inventory.html")
-
-    # Act
-    authenticated_page.get_by_role("button", name="Add to cart").first.click()
-
-    # Assert
-    expect(authenticated_page.locator(".shopping_cart_badge")).to_have_text("1")
+    """Authenticated user can add a product to the cart."""
+    inventory_page = InventoryPage(authenticated_page)
+    inventory_page.navigate()
+    inventory_page.add_first_item_to_cart()
+    inventory_page.expect_cart_count(1)
