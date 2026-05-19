@@ -1,0 +1,24 @@
+{
+    "create_valid_user": {
+        "firstName": "Test",
+        "lastName": "User",
+        "email": "testuser@test.com",
+        "age": 30
+    },
+    "create_e2e_user": {
+        "firstName": "E2E",
+        "lastName": "TestUser",
+        "email": "e2e@test.com",
+        "age": 25
+    },
+    "update_user": {
+        "firstName": "Updated",
+        "lastName": "User",
+        "email": "updated@test.com"
+    },
+    "update_e2e_user": {
+        "firstName": "E2E Updated",
+        "lastName": "TestUser",
+        "email": "e2e_updated@test.com"
+    }
+}

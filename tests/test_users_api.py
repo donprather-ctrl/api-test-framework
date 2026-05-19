@@ -1,9 +1,12 @@
 # tests/test_users_api.py
 
 import pytest
+import os
+CI = os.getenv("CI", "false").lower() == "true"
 from api_client.users_api import get_all_users, get_user_by_id, create_user, update_user, delete_user
 from utils.validators import validate_user, validate_user_write_response
 from utils.response_helpers import safe_json
+from utils.data_loader import load
 
 
 @pytest.mark.api
@@ -39,12 +42,7 @@ def test_get_user_by_id(user_id, expected_status, auth_headers):
 @pytest.mark.api
 @pytest.mark.smoke
 def test_create_user(auth_headers):
-    payload = {
-        "firstName": "Test",
-        "lastName": "User",
-        "email": "testuser@test.com",
-        "age": 30
-    }
+    payload = load("users.json")["create_valid_user"]
     response = create_user(payload, headers=auth_headers)
     assert response.status_code == 201
     data = safe_json(response)
@@ -56,11 +54,7 @@ def test_create_user(auth_headers):
 @pytest.mark.api
 @pytest.mark.smoke
 def test_update_user(auth_headers):
-    payload = {
-        "firstName": "Updated",
-        "lastName": "User",
-        "email": "updated@test.com"
-    }
+    payload = load("users.json")["update_user"]
     response = update_user(1, payload, headers=auth_headers)
     assert response.status_code == 200
     data = safe_json(response)
@@ -82,40 +76,27 @@ def test_delete_user(auth_headers):
 @pytest.mark.api
 @pytest.mark.regression
 def test_user_e2e_workflow(auth_headers):
-    """Validates full user lifecycle: CREATE → GET (seed) → UPDATE → DELETE."""
+    """Validates full user lifecycle: CREATE → GET → UPDATE → DELETE."""
 
-    # Create
-    payload = {
-        "firstName": "E2E",
-        "lastName": "TestUser",
-        "email": "e2e@test.com",
-        "age": 25
-    }
+    payload = load("users.json")["create_e2e_user"]
     response = create_user(payload, headers=auth_headers)
     assert response.status_code == 201
     data = safe_json(response)
     assert data is not None
     validate_user_write_response(data, payload)
 
-    # Get — use known seed user since dummyjson doesn't persist created users
     response = get_user_by_id(1, headers=auth_headers)
     assert response.status_code == 200
     data = safe_json(response)
     assert data is not None
     validate_user(data)
 
-    # Update
-    updated_payload = {
-        "firstName": "E2E Updated",
-        "lastName": "TestUser",
-        "email": "e2e_updated@test.com"
-    }
+    updated_payload = load("users.json")["update_e2e_user"]
     response = update_user(1, updated_payload, headers=auth_headers)
     assert response.status_code == 200
     data = safe_json(response)
     validate_user_write_response(data, updated_payload)
 
-    # Delete
     response = delete_user(1, headers=auth_headers)
     assert response.status_code == 200
     data = safe_json(response)
