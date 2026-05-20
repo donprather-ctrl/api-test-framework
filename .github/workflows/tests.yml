@@ -2,8 +2,12 @@ name: Run tests
 on:
   push:
     branches: ["**"]
+    paths-ignore:
+      - 'README.md'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'README.md'
 
 jobs:
   smoke:
@@ -30,18 +34,20 @@ jobs:
           echo "BASE_URL is set: ${{ secrets.BASE_URL != '' }}"
           echo "DEFAULT_USER is set: ${{ secrets.DEFAULT_USER != '' }}"
           echo "DEFAULT_PASSWORD is set: ${{ secrets.DEFAULT_PASSWORD != '' }}"
+      - name: Create reports directory
+        run: mkdir -p reports
       - name: Run smoke tests
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
           DEFAULT_USER: ${{ secrets.DEFAULT_USER }}
           DEFAULT_PASSWORD: ${{ secrets.DEFAULT_PASSWORD }}
         run: pytest -m smoke -v
-      - name: Upload test results
+      - name: Upload smoke report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-results
-          path: .pytest_cache/
+          name: smoke-report
+          path: reports/report.html
 
   regression:
     runs-on: ubuntu-latest
@@ -59,15 +65,17 @@ jobs:
           pip install -r requirements.txt
       - name: Install Playwright browsers
         run: playwright install --with-deps chromium
+      - name: Create reports directory
+        run: mkdir -p reports
       - name: Run regression tests
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
           DEFAULT_USER: ${{ secrets.DEFAULT_USER }}
           DEFAULT_PASSWORD: ${{ secrets.DEFAULT_PASSWORD }}
         run: pytest -m regression -v
-      - name: Upload test results
+      - name: Upload regression report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: regression-results
-          path: .pytest_cache/
+          name: regression-report
+          path: reports/report.html
